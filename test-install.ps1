@@ -14,7 +14,7 @@ if ($Verbose -eq $true) {
   $installArgs += '-v'
 }
 
-$packageParams = "/InstallCommand:$MyInvocation.MyCommand.Definition"
+$packageParams = ""
 
 if (-not [String]::IsNullOrWhiteSpace($Nameserver)) {
   $packageParams += " /Nameserver:$Nameserver"

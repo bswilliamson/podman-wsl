@@ -27,9 +27,8 @@ Function Install-Linux {
   $path = "$env:temp\$name"
   $hash = "47ccf9a773fb2e23c0b762c8d42748834e3dc06317eca7c23238ac962e31ddbe"
 
-  Write-Debug "Downloading fedora image"
   Get-ChocolateyWebFile `
-    -PackageName '$name' `
+    -PackageName "$name" `
     -FileFullPath "$path.tar.xz" `
     -ChecksumType 'sha256' `
     -Checksum $hash `
@@ -68,22 +67,6 @@ Function Install-Podman {
   Run-WSLScript "LANG=C.UTF-8 dnf -y install podman"
 }
 
-Function Add-RetryAtLogin {
-  Param($command)
-
-  $action = New-ScheduledTaskAction `
-    -Execute 'powershell.exe' `
-    -Argument "-NoExit -Command '$command; Unregister-ScheduledTask -TaskName InstallPodman -Confirm:$false'"
-  $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:UserName
-  $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries 
-
-  Register-ScheduledTask `
-    -TaskName 'InstallPodman' `
-    -Action $action -Trigger $trigger `
-    -RunLevel Highest `
-    -Settings $settings -Force
-}
-
 #
 # Main logic
 #
@@ -96,18 +79,12 @@ $httpsProxy = Get-Proxy('https://example.com/')
 
 Write-Output 'Configuring WSL'
 
-if (Get-Command wsl.exe -ErrorAction SilentlyContinue) {
+wsl --set-default-version 2
+$wsl2Available = $?
+
+if (wsl2Available) {
   Install-Linux -Nameserver $packageParams['Nameserver'] -HttpProxy $httpProxy -HttpsProxy $httpsProxy
   Install-Podman
 } else {
-  Write-Output 'WSL not yet available -- scheduling task for next login'
-
-  $installCommand = "choco install podman-wsl"
-  if (-not [String]::IsNullOrWhiteSpace($packageParams['InstallCommand'])) {
-    $installCommand = $packageParams['InstallCommand']
-  }
-  
-  Add-RetryAtLogin -Command "$installCommand"
-
-  throw 'Restart required to complete installation. The installation will automatically run again on the next login.'
+  throw 'This package requires WSL2. Run "choco install wsl2", reboot, then try again.'
 }
