@@ -64,7 +64,7 @@ Function Install-Linux {
 
 Function Install-Podman {
   Write-Output "Installing podman"
-  Run-WSLScript "LANG=C.UTF-8 dnf -y install podman"
+  Run-WSLScript "LANG=C.UTF-8 dnf -y install podman podman-docker"
 }
 
 #
