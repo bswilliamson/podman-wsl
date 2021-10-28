@@ -34,7 +34,7 @@ Function Install-Linux {
     -Checksum $hash `
     -Url64Bit 'https://kojipkgs.fedoraproject.org/packages/Fedora-Container-Base/35/20211014.n.0/images/Fedora-Container-Base-35-20211014.n.0.x86_64.tar.xz'
   
-  Remove-Item -Recurse "$path"
+  Remove-Item -Recurse "$path" -ErrorAction Ignore
 
   Get-ChocolateyUnzip -FileFullPath "$path.tar.xz" -Destination "$path\.."
   Get-ChocolateyUnzip -FileFullPath "$path.tar" -Destination "$path"
@@ -82,7 +82,7 @@ Write-Output 'Configuring WSL'
 wsl --set-default-version 2
 $wsl2Available = $?
 
-if (wsl2Available) {
+if ($wsl2Available) {
   Install-Linux -Nameserver $packageParams['Nameserver'] -HttpProxy $httpProxy -HttpsProxy $httpsProxy
   Install-Podman
 } else {
