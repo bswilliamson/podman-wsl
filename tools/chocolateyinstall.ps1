@@ -60,11 +60,29 @@ Function Install-Linux {
       chattr +i /etc/resolv.conf;
       echo -e '[network]\ngenerateResolvConf = false' > /etc/wsl.conf"
   }
+
+  Run-WSLScript "curl -fsSLo /tmp/dasel https://github.com/TomWright/dasel/releases/download/v1.21.2/dasel_linux_amd64 && 
+                 install /tmp/dasel /usr/local/bin && 
+                 rm -rf /tmp/dasel"
 }
 
 Function Install-Podman {
+  Param($Nameserver, $HttpProxy, $HttpsProxy)
   Write-Output "Installing podman"
   Run-WSLScript "LANG=C.UTF-8 dnf -y install podman podman-docker"
+
+  if (-not [String]::IsNullOrWhiteSpace($HttpProxy)) {
+    Set-ContainerConf -Path '.engine.env.[]' -Value "http_proxy=$HttpProxy"
+  }
+
+  if (-not [String]::IsNullOrWhiteSpace($HttpsProxy)) {
+    Set-ContainerConf -Path '.engine.env.[]' -Value "https_proxy=$HttpsProxy"
+  }
+}
+
+Function Set-ContainerConf {
+  Param($Path, $Value)
+  Run-WSLScript "dasel put string -f /usr/share/containers/containers.conf -p toml -s '$Path' '$Value'"
 }
 
 #
@@ -84,7 +102,7 @@ $wsl2Available = $?
 
 if ($wsl2Available) {
   Install-Linux -Nameserver $packageParams['Nameserver'] -HttpProxy $httpProxy -HttpsProxy $httpsProxy
-  Install-Podman
+  Install-Podman -HttpProxy $httpProxy -HttpsProxy $httpsProxy
 } else {
   throw 'This package requires WSL2. Run "choco install wsl2", reboot, then try again.'
 }
