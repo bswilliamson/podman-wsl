@@ -14,7 +14,7 @@ Function Get-Proxy {
 }
 
 Function Run-WSLScript {
-  Param($Command)
+  $Command = $args -join " && "
   wsl -d podman -u root -e /bin/bash --login -c "$Command"
 }
 
@@ -54,16 +54,18 @@ Function Install-Linux {
   }
   
   if (-not [String]::IsNullOrWhiteSpace($nameserver)) {
-    Run-WSLScript "rm /etc/resolv.conf &&
-      echo nameserver $Nameserver > /etc/resolv.conf &&
-      LANG=C.UTF-8 dnf -yq install e2fsprogs &&
-      chattr +i /etc/resolv.conf &&
-      echo -e '[network]\ngenerateResolvConf = false' > /etc/wsl.conf"
+    Run-WSLScript `
+      "rm /etc/resolv.conf" `
+      "echo nameserver $Nameserver > /etc/resolv.conf" `
+      "LANG=C.UTF-8 dnf -yq install e2fsprogs" `
+      "chattr +i /etc/resolv.conf" `
+      "echo -e '[network]\ngenerateResolvConf = false' > /etc/wsl.conf"
   }
 
-  Run-WSLScript "curl -fsSLo /tmp/dasel https://github.com/TomWright/dasel/releases/download/v1.21.2/dasel_linux_amd64 && 
-                 install /tmp/dasel /usr/local/bin && 
-                 rm -rf /tmp/dasel"
+  Run-WSLScript `
+    "curl -fsSLo /tmp/dasel https://github.com/TomWright/dasel/releases/download/v1.21.2/dasel_linux_amd64" `
+    "install /tmp/dasel /usr/local/bin" `
+    "rm -rf /tmp/dasel"
 }
 
 Function Install-Podman {
