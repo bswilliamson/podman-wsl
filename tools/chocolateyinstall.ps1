@@ -97,13 +97,15 @@ $httpsProxy = Get-Proxy('https://example.com/')
 
 Write-Output 'Configuring WSL'
 
-
-wsl --set-default-version 2
-$wsl2Available = $?
+$wsl2Available = $false
+if (Get-Command wsl.exe -ErrorAction Ignore) {
+  wsl --set-default-version 2 | Out-Null
+  $wsl2Available = $?
+}
 
 if ($wsl2Available) {
   Install-Linux -Nameserver $packageParams['Nameserver'] -HttpProxy $httpProxy -HttpsProxy $httpsProxy
   Install-Podman -HttpProxy $httpProxy -HttpsProxy $httpsProxy
 } else {
-  throw 'This package requires WSL2. Run "choco install wsl2", reboot, then try again.'
+  throw 'This package requires WSL2 to be installed manually. Run "choco install wsl2", reboot, then try again.'
 }
