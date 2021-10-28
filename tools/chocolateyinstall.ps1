@@ -54,10 +54,10 @@ Function Install-Linux {
   }
   
   if (-not [String]::IsNullOrWhiteSpace($nameserver)) {
-    Run-WSLScript "rm /etc/resolv.conf;
-      echo nameserver $Nameserver > /etc/resolv.conf;
-      LANG=C.UTF-8 dnf -y install e2fsprogs;
-      chattr +i /etc/resolv.conf;
+    Run-WSLScript "rm /etc/resolv.conf &&
+      echo nameserver $Nameserver > /etc/resolv.conf &&
+      LANG=C.UTF-8 dnf -yq install e2fsprogs &&
+      chattr +i /etc/resolv.conf &&
       echo -e '[network]\ngenerateResolvConf = false' > /etc/wsl.conf"
   }
 
@@ -69,7 +69,7 @@ Function Install-Linux {
 Function Install-Podman {
   Param($Nameserver, $HttpProxy, $HttpsProxy)
   Write-Output "Installing podman"
-  Run-WSLScript "LANG=C.UTF-8 dnf -y install podman podman-docker"
+  Run-WSLScript "LANG=C.UTF-8 dnf -yq install podman podman-docker"
 
   if (-not [String]::IsNullOrWhiteSpace($HttpProxy)) {
     Set-ContainerConf -Path '.engine.env.[]' -Value "http_proxy=$HttpProxy"
@@ -96,6 +96,7 @@ $httpProxy = Get-Proxy('http://example.com/')
 $httpsProxy = Get-Proxy('https://example.com/')
 
 Write-Output 'Configuring WSL'
+
 
 wsl --set-default-version 2
 $wsl2Available = $?
