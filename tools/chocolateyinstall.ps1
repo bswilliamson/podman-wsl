@@ -61,17 +61,17 @@ Function Install-Linux {
       "chattr +i /etc/resolv.conf" `
       "echo -e '[network]\ngenerateResolvConf = false' > /etc/wsl.conf"
   }
-
-  Run-WSLScript `
-    "curl -fsSLo /tmp/dasel https://github.com/TomWright/dasel/releases/download/v1.21.2/dasel_linux_amd64" `
-    "install /tmp/dasel /usr/local/bin" `
-    "rm -rf /tmp/dasel"
 }
 
 Function Install-Podman {
   Param($Nameserver, $HttpProxy, $HttpsProxy)
   Write-Output "Installing podman"
   Run-WSLScript "LANG=C.UTF-8 dnf -yq install podman podman-docker"
+
+  Run-WSLScript `
+    "curl -fsSLo /tmp/dasel https://github.com/TomWright/dasel/releases/download/v1.21.2/dasel_linux_amd64" `
+    "install /tmp/dasel /usr/local/bin" `
+    "rm -rf /tmp/dasel"
 
   if (-not [String]::IsNullOrWhiteSpace($HttpProxy)) {
     Set-ContainerConf -Path '.engine.env.[]' -Value "http_proxy=$HttpProxy"
