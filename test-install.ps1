@@ -14,12 +14,21 @@ if ($Verbose -eq $true) {
   $installArgs += '-v'
 }
 
- $packageParams = @()
+$packageParams = @()
 
 if (-not [String]::IsNullOrWhiteSpace($Nameserver)) {
   $packageParams += "/Nameserver:$Nameserver"
 }
 
-choco install $installArgs podman-wsl --params "$packageParams" -s "'.;https://chocolatey.org/api/v2'" 
+$opts = @('-s', '.;https://chocolatey.org/api/v2')
 
-rm *.nupkg
+if (-not $packageParams.Length -eq 0) {
+  $opts += "--params"
+  foreach ($param in $packageParams) {
+    $opts += "$param"
+  }
+}
+
+choco install $installArgs podman-wsl $opts
+
+Remove-Item *.nupkg
