@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 #
-# Function definitions
+# Utilities
 #
 
 Function Get-Proxy {
@@ -17,6 +17,10 @@ Function Run-WSLScript {
   $Command = $args -join " && "
   wsl -d podman -u root -e /bin/bash --login -c "$Command"
 }
+
+#
+# Installtion steps
+#
 
 Function Install-Linux {
   Param($Nameserver, $HttpProxy, $HttpsProxy)
@@ -74,17 +78,15 @@ Function Install-Podman {
     "rm -rf /tmp/dasel"
 
   if (-not [String]::IsNullOrWhiteSpace($HttpProxy)) {
-    Set-ContainerConf -Path '.engine.env.[]' -Value "http_proxy=$HttpProxy"
+    Run-WSLScript "dasel put string -f /usr/share/containers/containers.conf -p toml -s '.engine.env.[]' 'http_proxy=$HttpProxy'"
   }
 
   if (-not [String]::IsNullOrWhiteSpace($HttpsProxy)) {
-    Set-ContainerConf -Path '.engine.env.[]' -Value "https_proxy=$HttpsProxy"
+    Run-WSLScript "dasel put string -f /usr/share/containers/containers.conf -p toml -s '.engine.env.[]' 'https_proxy=$HttpsProxy'"
   }
-}
 
-Function Set-ContainerConf {
-  Param($Path, $Value)
-  Run-WSLScript "dasel put string -f /usr/share/containers/containers.conf -p toml -s '$Path' '$Value'"
+  Run-WSLScript "dasel delete -f /etc/containers/registries.conf -p toml -s '.unqualified-search-registries'"
+  Run-WSLScript "dasel put string -f /etc/containers/registries.conf -p toml -s '.unqualified-search-registries.[]' 'docker.io'"
 }
 
 #
